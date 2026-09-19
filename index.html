@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Breaking Into Big Law</title>
+  <meta name="description" content="A free guide to breaking into Big Law. Highlight any passage and send the author a comment.">
+  <meta property="og:title" content="Breaking Into Big Law">
+  <meta property="og:description" content="A free guide for first-year law students. Highlight any passage and send the author a comment.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://breakingintobiglaw.com/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23A4262C'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' text-anchor='middle' fill='white'%3EB%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-rule" aria-hidden="true"></span>
+      <span class="brand-label">Breaking Into Big Law</span>
+    </div>
+    <nav class="actions">
+      <button type="button" class="link-btn" id="btn-notify"><span class="long">Get the update</span><span class="short">Updates</span></button>
+      <a class="link-btn" id="btn-download" href="guide.pdf" download><span class="long">Download PDF</span><span class="short">PDF</span></a>
+      <button type="button" class="link-btn notes-toggle" id="btn-notes" aria-controls="notes" aria-expanded="false">Notes <span class="count" id="notes-count">0</span></button>
+    </nav>
+  </header>
+
+  <div class="hint" id="hint" hidden>
+    <p>Select any passage to highlight it and send the author a comment. Sign with your name if you like.</p>
+    <button type="button" class="hint-close" id="hint-close" aria-label="Dismiss">&times;</button>
+  </div>
+
+  <main class="layout">
+    <section class="reader" id="reader" aria-label="Guide">
+      <div class="status" id="status">Loading the guide&hellip;</div>
+      <div class="pages" id="pages"></div>
+    </section>
+
+    <aside class="notes" id="notes" aria-label="Your notes">
+      <div class="notes-head">
+        <h2>Your notes</h2>
+        <button type="button" class="hint-close notes-close" id="notes-close" aria-label="Close notes">&times;</button>
+      </div>
+      <p class="notes-intro">Highlight a passage to comment on it. Notes go privately to the author and are never shown publicly.</p>
+      <label class="field">
+        <span>Your name <em>(optional, sent with your notes)</em></span>
+        <input type="text" id="panel-name" maxlength="80" autocomplete="name" placeholder="Sign your notes">
+      </label>
+      <button type="button" class="primary wide" id="btn-general">Leave a general comment</button>
+      <ol class="note-list" id="note-list"></ol>
+      <p class="notes-empty" id="notes-empty">You haven&rsquo;t left any notes yet.</p>
+    </aside>
+  </main>
+
+  <button type="button" class="float-btn" id="float-btn" hidden>Highlight &amp; comment</button>
+
+  <dialog class="modal" id="composer" aria-labelledby="composer-title">
+    <form method="dialog" id="composer-form">
+      <h2 id="composer-title">Comment for the author</h2>
+      <blockquote class="quote" id="composer-quote" hidden></blockquote>
+      <label class="field">
+        <span>Your comment</span>
+        <textarea id="composer-text" rows="5" maxlength="5000" placeholder="What is unclear, wrong, or missing? What helped?"></textarea>
+      </label>
+      <label class="field">
+        <span>Your name <em>(optional, shown to the author)</em></span>
+        <input type="text" id="composer-name" maxlength="80" autocomplete="name">
+      </label>
+      <label class="hp" aria-hidden="true">Website <input type="text" id="composer-hp" tabindex="-1" autocomplete="off"></label>
+      <p class="form-error" id="composer-error" role="alert" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="composer-cancel">Cancel</button>
+        <button type="submit" class="primary" id="composer-submit" value="send">Send to author</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="subscribe" aria-labelledby="subscribe-title">
+    <form method="dialog" id="subscribe-form">
+      <p class="eyebrow">Free update</p>
+      <h2 id="subscribe-title">This guide will be updated</h2>
+      <p class="lede">We expect to update the guide again by <span data-cfg="updateBy">September</span>. Want the updated version? Leave your email and we&rsquo;ll let you know when it&rsquo;s out. Free of charge.</p>
+      <label class="field">
+        <span>Email</span>
+        <input type="email" id="subscribe-email" required maxlength="200" autocomplete="email" placeholder="you@example.com">
+      </label>
+      <label class="hp" aria-hidden="true">Website <input type="text" id="subscribe-hp" tabindex="-1" autocomplete="off"></label>
+      <p class="form-error" id="subscribe-error" role="alert" hidden></p>
+      <p class="fine">We use your email only to tell you about updates to this guide.</p>
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="subscribe-later">Not now</button>
+        <button type="submit" class="primary" id="subscribe-submit" value="send">Notify me</button>
+      </div>
+    </form>
+    <div class="thanks" id="subscribe-thanks" hidden>
+      <h2>You&rsquo;re on the list</h2>
+      <p class="lede">We&rsquo;ll email you when the updated guide is out.</p>
+      <div class="modal-actions"><button type="button" class="primary" id="subscribe-done">Back to reading</button></div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="assets/app.js"></script>
+</body>
+</html>
