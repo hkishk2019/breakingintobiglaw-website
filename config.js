@@ -8,17 +8,15 @@ window.BIBL_CONFIG = {
   // The document readers see. Replace guide.pdf to publish a new version, and
   // bump documentVersion so comments record which version they were made on.
   documentUrl: "guide.pdf",
-  documentVersion: "2026-09-18 v3 draft",
+  documentVersion: "2026-11-09 v5",
 
   // The reading edition at /read.html is generated from the guide source and moves
   // on its own; comments made there are recorded under this label instead.
   readVersion: "2026-11-09 reading edition",
 
-  // Shown in the update dialog: "We expect to update the guide again by ___."
-  updateBy: "the end of September 2026",
+  // Milliseconds after arrival before the update prompt opens.
+  openPromptDelayMs: 900,
 
-  // Seconds of visible reading time before the update dialog appears.
-  popupDelaySeconds: 30,
 
   // After "Not now", wait this many days before asking the same reader again.
   popupSnoozeDays: 7,

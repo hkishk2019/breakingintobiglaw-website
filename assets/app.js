@@ -9,8 +9,7 @@ const CFG = Object.assign(
     endpoint: "",
     documentUrl: "guide.pdf",
     documentVersion: "",
-    updateBy: "September",
-    popupDelaySeconds: 30,
+    openPromptDelayMs: 900,
     popupSnoozeDays: 7,
   },
   window.BIBL_CONFIG || {},
@@ -728,10 +727,6 @@ let readSeconds = 0;
 let promptDue = false;
 let clockStarted = false;
 
-document.querySelectorAll('[data-cfg="updateBy"]').forEach((el) => {
-  el.textContent = CFG.updateBy;
-});
-
 function promptAllowed() {
   const state = store.get(KEY.subscribe, null);
   if (!state) return true;
@@ -742,17 +737,17 @@ function promptAllowed() {
   return true;
 }
 
+// The prompt used to wait for thirty seconds of visible reading. That depended on the
+// Page Visibility API, on a timer the browser was willing to run, and on the PDF having
+// rendered at all — three things that are not reliable inside an in-app browser, and the
+// reader never saw it. It now opens shortly after arrival, once per device.
 function startReadingClock() {
   if (clockStarted || !promptAllowed()) return;
   clockStarted = true;
-  const timer = setInterval(() => {
-    if (document.visibilityState !== "visible") return;
-    readSeconds += 1;
-    if (readSeconds < CFG.popupDelaySeconds) return;
-    clearInterval(timer);
+  setTimeout(() => {
     promptDue = true;
     maybePromptAfterDialog();
-  }, 1000);
+  }, Math.max(0, Number(CFG.openPromptDelayMs) || 900));
 }
 
 function maybePromptAfterDialog() {
