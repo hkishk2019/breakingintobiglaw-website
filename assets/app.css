@@ -349,6 +349,21 @@ button, input, textarea { font: inherit; color: inherit; }
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 .modal::backdrop { background: rgba(26, 26, 26, 0.45); }
+/* fallback for in-app browsers with no showModal(): an open dialog is laid out inline,
+   so it has to be centred and given its own backdrop by hand */
+dialog.modal[open] {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  z-index: 50;
+}
+body.modal-open::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 26, 0.45);
+  z-index: 40;
+}
 .modal h2 {
   margin: 0 0 12px;
   font-family: var(--serif);
@@ -471,3 +486,10 @@ button, input, textarea { font: inherit; color: inherit; }
   .notes { transition: none; }
   .page .hl.flash { animation: none; }
 }
+
+.form-alt {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--muted, #4a4a4a);
+}
+.form-alt a { color: inherit; }

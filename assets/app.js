@@ -1,7 +1,8 @@
-import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
+import * as pdfjsLib from "./vendor/pdf.min.mjs";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+// served from this origin on purpose: a CDN import that fails takes the whole module
+// with it, and the CDNs are unreliable from the networks a lot of our readers are on
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("./vendor/pdf.worker.min.mjs", import.meta.url).href;
 
 const CFG = Object.assign(
   {
@@ -17,6 +18,7 @@ const CFG = Object.assign(
 const IS_LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
 const ENDPOINT = CFG.endpoint || (IS_LOCAL ? "/api/submit" : "");
 const MAX_PAGE_WIDTH = 880;
+const EDITOR_EMAIL = CFG.editorEmail || "editor@breakingintobiglaw.com";
 
 const $ = (id) => document.getElementById(id);
 
@@ -118,22 +120,48 @@ const views = []; // one per PDF page
 const near = new Set(); // views close enough to the viewport to render
 let firstPaint = false;
 
+// Device pixels per CSS pixel. Tracked per render so browser zoom (which
+// changes it without changing the page's CSS width) triggers a sharp re-render.
+function outputScale() {
+  return Math.min(window.devicePixelRatio || 1, 3);
+}
+
+// Whole CSS pixels, and an even gap either side, so the centred page starts on
+// a device pixel and the canvas is shown 1:1 instead of being resampled.
 function pageWidth() {
-  return Math.min(pagesEl.clientWidth, MAX_PAGE_WIDTH);
+  let width = Math.floor(Math.min(pagesEl.clientWidth, MAX_PAGE_WIDTH));
+  if ((pagesEl.clientWidth - width) % 2) width -= 1;
+  return width;
 }
 
 function layout() {
   const width = pageWidth();
+  const dpr = outputScale();
   for (const v of views) {
     const scale = width / v.base.w;
-    if (v.scale === scale) continue;
+    if (v.scale === scale && v.dpr === dpr) continue;
     v.scale = scale;
-    v.div.style.width = Math.floor(v.base.w * scale) + "px";
-    v.div.style.height = Math.floor(v.base.h * scale) + "px";
+    v.dpr = dpr;
+    v.cssW = width;
+    v.cssH = Math.round(v.base.h * scale);
+    v.div.style.width = v.cssW + "px";
+    v.div.style.height = v.cssH + "px";
     v.div.style.setProperty("--scale-factor", scale);
     if (v.task) v.task.cancel();
     if (near.has(v)) renderPage(v);
   }
+}
+
+function watchPixelRatio() {
+  const query = window.matchMedia("(resolution: " + window.devicePixelRatio + "dppx)");
+  query.addEventListener(
+    "change",
+    () => {
+      layout();
+      watchPixelRatio();
+    },
+    { once: true },
+  );
 }
 
 function buildPage(v) {
@@ -158,7 +186,7 @@ async function renderPage(v) {
     v.again = true;
     return;
   }
-  if (v.renderedScale === v.scale) return;
+  if (v.renderedKey === renderKey(v)) return;
   v.busy = true;
   try {
     await paint(v);
@@ -173,25 +201,30 @@ async function renderPage(v) {
   }
 }
 
+function renderKey(v) {
+  return v.scale + "@" + v.dpr;
+}
+
 async function paint(v) {
+  const key = renderKey(v);
   const scale = v.scale;
   const viewport = v.page.getViewport({ scale });
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const canvas = document.createElement("canvas");
-  canvas.width = Math.floor(viewport.width * dpr);
-  canvas.height = Math.floor(viewport.height * dpr);
+  // Exactly the page box in device pixels; the transform maps the PDF onto it.
+  canvas.width = Math.round(v.cssW * v.dpr);
+  canvas.height = Math.round(v.cssH * v.dpr);
 
   v.task = v.page.render({
     canvasContext: canvas.getContext("2d"),
     viewport,
-    transform: dpr === 1 ? null : [dpr, 0, 0, dpr, 0, 0],
+    transform: [canvas.width / viewport.width, 0, 0, canvas.height / viewport.height, 0, 0],
   });
   try {
     await v.task.promise;
   } finally {
     v.task = null;
   }
-  if (v.scale !== scale || !near.has(v)) {
+  if (renderKey(v) !== key || !near.has(v)) {
     canvas.width = 0;
     v.again = near.has(v);
     return;
@@ -218,12 +251,11 @@ async function paint(v) {
     v.text.append(end);
     v.textScale = scale;
   }
-  v.renderedScale = scale;
+  v.renderedKey = key;
 
   if (!firstPaint) {
     firstPaint = true;
     statusEl.hidden = true;
-    startReadingClock();
   }
 }
 
@@ -234,7 +266,7 @@ function release(v) {
     v.canvas.remove();
     v.canvas = null;
   }
-  v.renderedScale = null;
+  v.renderedKey = null;
 }
 
 const observer = new IntersectionObserver(
@@ -263,7 +295,9 @@ async function openDocument() {
     statusEl.innerHTML =
       'The guide couldn&rsquo;t be displayed here. <a href="' +
       encodeURI(CFG.documentUrl) +
-      '" download>Download the PDF</a> instead.';
+      '" download>Download the PDF</a>, or email ' +
+      '<a href="mailto:' + EDITOR_EMAIL + '?subject=subscribe">' + EDITOR_EMAIL + '</a> ' +
+      'with &ldquo;subscribe&rdquo; in the subject line and we will send you the next edition.';
     return;
   }
 
@@ -277,6 +311,7 @@ async function openDocument() {
     buildPage(v);
   });
   layout();
+  watchPixelRatio();
   views.forEach((v) => {
     drawHighlights(v);
     observer.observe(v.div);
@@ -511,12 +546,12 @@ function openComposer(selection) {
     /* ignore */
   }
   pendingSelection = null;
-  composer.showModal();
+  openModal(composer);
   $("composer-text").focus();
 }
 
 function closeComposer() {
-  if (composer.open) composer.close();
+  if (composer.open) closeModal(composer);
 }
 
 composer.addEventListener("close", () => {
@@ -730,6 +765,27 @@ function maybePromptAfterDialog() {
   openSubscribe("timer");
 }
 
+function openModal(dialog) {
+  if (dialog.open) return;
+  try {
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+  } catch {
+    dialog.setAttribute("open", "");
+  }
+  document.body.classList.add("modal-open");
+}
+
+function closeModal(dialog) {
+  try {
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  } catch {
+    dialog.removeAttribute("open");
+  }
+  if (!document.querySelector("dialog[open]")) document.body.classList.remove("modal-open");
+}
+
 function openSubscribe(source) {
   subscribeSource = source;
   hideFloat();
@@ -739,7 +795,7 @@ function openSubscribe(source) {
   $("subscribe-hp").value = "";
   $("subscribe-submit").disabled = false;
   $("subscribe-submit").textContent = "Notify me";
-  if (!subscribeDialog.open) subscribeDialog.showModal();
+  openModal(subscribeDialog);
 }
 
 subscribeDialog.addEventListener("cancel", () => {
@@ -749,9 +805,9 @@ subscribeDialog.addEventListener("close", () => maybePromptAfterDialog());
 
 $("subscribe-later").addEventListener("click", () => {
   if (subscribeSource === "timer") store.set(KEY.subscribe, { state: "snoozed", at: Date.now() });
-  subscribeDialog.close();
+  closeModal(subscribeDialog);
 });
-$("subscribe-done").addEventListener("click", () => subscribeDialog.close());
+$("subscribe-done").addEventListener("click", () => closeModal(subscribeDialog));
 $("btn-notify").addEventListener("click", () => openSubscribe("header"));
 
 $("subscribe-form").addEventListener("submit", async (e) => {
@@ -817,4 +873,5 @@ $("hint-close").addEventListener("click", () => {
 $("btn-download").href = CFG.documentUrl;
 $("panel-name").value = readerName();
 renderNotes();
+startReadingClock();
 openDocument();
