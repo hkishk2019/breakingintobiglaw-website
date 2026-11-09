@@ -16,7 +16,7 @@ const CFG = Object.assign(
   window.BIBL_CONFIG || {},
 );
 const IS_LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
-const ENDPOINT = CFG.endpoint || (IS_LOCAL ? "/api/submit" : "");
+const ENDPOINT = IS_LOCAL ? "/api/submit" : (CFG.endpoint || "");
 const MAX_PAGE_WIDTH = 880;
 const EDITOR_EMAIL = CFG.editorEmail || "editor@breakingintobiglaw.com";
 

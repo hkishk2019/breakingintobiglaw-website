@@ -65,6 +65,46 @@ p{margin:0 0 1.05rem}
 .ranks .n{color:var(--red);flex:0 0 2rem;font-size:.9rem}
 .t-v4{color:var(--t-v4)}.t-src{color:var(--t-src)}.t-v5{color:var(--t-v5)}.t-fix{color:var(--t-fix)}
 .t-v4 .label,.t-src .label,.t-v5 .label,.t-fix .label{color:inherit}
+.topbar .tools{display:flex;align-items:baseline;gap:16px}
+.topbar button{background:none;border:0;padding:0;font:inherit;font-size:14px;color:var(--red);cursor:pointer}
+#notes-count{display:inline-block;min-width:1.15em;padding:0 .3em;border-radius:999px;background:var(--red);
+color:var(--paper);font-size:11px;text-align:center;vertical-align:.1em}
+#notes-count[hidden]{display:none}
+mark.hl{background:rgba(164,38,44,.14);color:inherit;padding:.05em 0;border-radius:2px}
+#float-comment{position:absolute;z-index:20;padding:7px 14px;border:0;border-radius:999px;background:var(--ink);
+color:var(--paper);font:inherit;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.22);cursor:pointer}
+#float-comment[hidden]{display:none}
+.modal{width:min(480px,calc(100vw - 28px));max-height:calc(100dvh - 28px);overflow:auto;border:0;
+border-top:3px solid var(--red);border-radius:4px;padding:22px 22px 18px;background:var(--paper);color:var(--body);
+box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal::backdrop{background:rgba(26,26,26,.45)}
+dialog.modal[open]{position:fixed;inset:0;margin:auto;z-index:50}
+body.modal-open::before{content:"";position:fixed;inset:0;background:rgba(26,26,26,.45);z-index:40}
+.modal .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin:0 0 .3rem}
+.modal h2{font-size:1.4rem;font-weight:400;color:var(--ink);margin:0 0 .9rem;line-height:1.2}
+.modal blockquote{margin:0 0 1rem;padding:.1rem 0 .1rem .9rem;border-left:2px solid var(--hair);
+font-style:italic;color:var(--soft);font-size:.95rem;max-height:7.5rem;overflow:auto}
+.modal label{display:block;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);
+margin:0 0 .3rem}
+.modal label .opt{text-transform:none;letter-spacing:0;font-size:.8rem}
+.modal textarea,.modal input[type=text]{width:100%;font:inherit;font-size:1rem;padding:.55rem .65rem;
+border:1px solid var(--hair);border-radius:3px;background:var(--paper);color:var(--body);margin:0 0 .9rem}
+.modal textarea{resize:vertical}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.form-error{color:var(--red);font-size:.9rem;margin:0 0 .6rem}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:.4rem}
+.modal-actions button{font:inherit;font-size:.95rem;padding:.5rem 1rem;border-radius:3px;cursor:pointer}
+.modal-actions .ghost{background:none;border:1px solid var(--hair);color:var(--soft)}
+.modal-actions .primary{background:var(--red);border:1px solid var(--red);color:#fff}
+.note-item{border-top:1px solid var(--hair);padding:.9rem 0}
+.note-item blockquote{margin:0 0 .5rem}
+.note-item p{font-size:.95rem;margin:0 0 .5rem}
+.note-item button{font:inherit;font-size:.85rem;padding:.3rem .7rem;border:1px solid var(--hair);
+border-radius:3px;background:none;color:var(--soft);cursor:pointer}
+#notes-body .empty{color:var(--soft);font-style:italic}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:60;background:var(--ink);
+color:var(--paper);padding:10px 16px;border-radius:999px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#toast[hidden]{display:none}
 footer.end{margin:4rem 0 0;padding-top:1.2rem;border-top:1px solid var(--hair);font-size:.85rem;color:var(--grey)}
 @media (min-width:720px){body{font-size:20px}.wrap{padding:0 24px 7rem}h1{font-size:3.2rem}.ranks{columns:2;column-gap:2.4rem}}
 @media (prefers-color-scheme:dark){
@@ -74,7 +114,8 @@ footer.end{margin:4rem 0 0;padding-top:1.2rem;border-top:1px solid var(--hair);f
 </style>
 </head>
 <body>
-<div class="topbar"><div class="in"><b>Breaking Into Big Law</b><a href="#toc">Contents</a></div></div>
+<div class="topbar"><div class="in"><b>Breaking Into Big Law</b>
+<span class="tools"><a href="#toc">Contents</a><button type="button" id="btn-notes">Notes <span id="notes-count" hidden>0</span></button></span></div></div>
 <div class="wrap">
 <header class="cover">
   <div class="rule"></div>
@@ -373,5 +414,37 @@ footer.end{margin:4rem 0 0;padding-top:1.2rem;border-top:1px solid var(--hair);f
 <footer class="end">Updated editions at <a href="https://breakingintobiglaw.com">breakingintobiglaw.com</a>.
 Write to <a href="mailto:editor@breakingintobiglaw.com?subject=subscribe">editor@breakingintobiglaw.com</a>.</footer>
 </div>
+
+<button type="button" id="float-comment" hidden>Comment</button>
+
+<dialog class="modal" id="composer" aria-labelledby="composer-title">
+  <form id="composer-form" method="dialog">
+    <p class="kicker">Your note</p>
+    <h2 id="composer-title">Send the editors a comment</h2>
+    <blockquote id="composer-quote"></blockquote>
+    <label for="composer-text">Comment</label>
+    <textarea id="composer-text" rows="4" maxlength="5000" placeholder="What did this make you think?"></textarea>
+    <label for="composer-name">Your name <span class="opt">optional</span></label>
+    <input type="text" id="composer-name" maxlength="80" autocomplete="name" placeholder="Sign it if you like">
+    <label class="hp" aria-hidden="true">Website <input type="text" id="composer-hp" tabindex="-1" autocomplete="off"></label>
+    <p class="form-error" id="composer-error" role="alert" hidden></p>
+    <div class="modal-actions">
+      <button type="button" class="ghost" id="composer-cancel">Cancel</button>
+      <button type="submit" class="primary" id="composer-submit">Send to the editors</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="modal" id="notes" aria-labelledby="notes-title">
+  <p class="kicker">On this device</p>
+  <h2 id="notes-title">Your highlights</h2>
+  <div id="notes-body"></div>
+  <div class="modal-actions"><button type="button" class="primary" id="notes-close">Back to reading</button></div>
+</dialog>
+
+<div id="toast" hidden></div>
+
+<script src="config.js"></script>
+<script src="assets/read.js"></script>
 </body>
 </html>

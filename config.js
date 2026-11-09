@@ -10,6 +10,10 @@ window.BIBL_CONFIG = {
   documentUrl: "guide.pdf",
   documentVersion: "2026-09-18 v3 draft",
 
+  // The reading edition at /read.html is generated from the guide source and moves
+  // on its own; comments made there are recorded under this label instead.
+  readVersion: "2026-11-09 reading edition",
+
   // Shown in the update dialog: "We expect to update the guide again by ___."
   updateBy: "the end of September 2026",
 
