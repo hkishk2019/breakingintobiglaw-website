@@ -17,6 +17,21 @@ const CFG = Object.assign(
 const IS_LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
 const ENDPOINT = IS_LOCAL ? "/api/submit" : (CFG.endpoint || "");
 const MAX_PAGE_WIDTH = 880;
+
+// Cloudflare Web Analytics, injected only when a token is configured. It is a separate
+// deferred beacon, so if it fails to load — and static.cloudflareinsights.com is slow or
+// unreachable from the mainland networks a lot of our readers are on — the page is
+// unaffected and the visit simply is not counted.
+(function () {
+  var token = (window.BIBL_CONFIG || {}).cfAnalyticsToken;
+  if (!token) return;
+  var s = document.createElement("script");
+  s.defer = true;
+  s.src = "https://static.cloudflareinsights.com/beacon.min.js";
+  s.setAttribute("data-cf-beacon", JSON.stringify({ token: token }));
+  document.head.appendChild(s);
+})();
+
 const EDITOR_EMAIL = CFG.editorEmail || "editor@breakingintobiglaw.com";
 
 const $ = (id) => document.getElementById(id);

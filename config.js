@@ -7,6 +7,10 @@ window.BIBL_CONFIG = {
 
   // The document readers see. Replace guide.pdf to publish a new version, and
   // bump documentVersion so comments record which version they were made on.
+  // Cloudflare Web Analytics site token. Public by design — it ships in the page
+  // source. Leave blank and no beacon is loaded at all.
+  cfAnalyticsToken: "",
+
   documentUrl: "guide.pdf",
   documentVersion: "2026-11-09 v5",
 

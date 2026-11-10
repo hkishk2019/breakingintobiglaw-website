@@ -28,6 +28,21 @@
     },
   };
 
+
+  // Cloudflare Web Analytics, injected only when a token is configured. It is a separate
+  // deferred beacon, so if it fails to load — and static.cloudflareinsights.com is slow or
+  // unreachable from the mainland networks a lot of our readers are on — the page is
+  // unaffected and the visit simply is not counted.
+  (function () {
+    var token = (window.BIBL_CONFIG || {}).cfAnalyticsToken;
+    if (!token) return;
+    var s = document.createElement("script");
+    s.defer = true;
+    s.src = "https://static.cloudflareinsights.com/beacon.min.js";
+    s.setAttribute("data-cf-beacon", JSON.stringify({ token: token }));
+    document.head.appendChild(s);
+  })();
+
   var notes = store.get(KEY.notes, []);
   var $ = function (id) { return document.getElementById(id); };
 
