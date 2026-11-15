@@ -557,3 +557,26 @@ body.modal-open::before {
   color: var(--muted, #4a4a4a);
 }
 .form-alt a { color: inherit; }
+
+/* ---------- contact panel ---------- */
+/* A bare mailto: link does nothing at all on a machine with no mail handler, which is
+   where this started: the address has to be visible and copyable, not just linked. */
+.modal .address {
+  margin: 18px 0 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  background: var(--paper-2, #f7f6f3);
+  font-family: var(--sans);
+  font-size: 17px;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-align: center;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+.modal-actions a.ghost { text-decoration: none; display: inline-flex; align-items: center; }
+@media (max-width: 560px) {
+  .modal .address { font-size: 15px; }
+  .modal-actions { flex-wrap: wrap; }
+}

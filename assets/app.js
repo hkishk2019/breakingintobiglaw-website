@@ -914,6 +914,37 @@ $("subscribe-later").addEventListener("click", () => {
 $("subscribe-done").addEventListener("click", () => closeModal(subscribeDialog));
 $("btn-notify").addEventListener("click", () => openSubscribe("header"));
 
+// ---------------------------------------------------------------- contact panel
+const contactDialog = $("contact");
+$("contact-address").textContent = EDITOR_EMAIL;
+$("contact-open").href = "mailto:" + EDITOR_EMAIL;
+
+$("btn-email").addEventListener("click", () => {
+  hideFloat();
+  openModal(contactDialog);
+});
+$("contact-close").addEventListener("click", () => closeModal(contactDialog));
+
+$("contact-copy").addEventListener("click", async () => {
+  const button = $("contact-copy");
+  try {
+    await navigator.clipboard.writeText(EDITOR_EMAIL);
+    toast("Address copied.");
+    button.textContent = "Copied";
+    setTimeout(() => { button.textContent = "Copy address"; }, 2000);
+  } catch {
+    // no clipboard permission, or an insecure context: select it so a manual copy works
+    const range = document.createRange();
+    range.selectNodeContents($("contact-address"));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    toast("Select the address above and copy it.");
+  }
+});
+
+
+
 $("subscribe-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const input = $("subscribe-email");
