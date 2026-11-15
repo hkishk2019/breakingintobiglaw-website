@@ -1,2 +1,6 @@
 dev/submissions.jsonl
 .DS_Store
+
+# The colour-marked reading edition is a proof, not a publication: it is generated
+# into the guide's own output folder, never into the directory that gets served.
+read.html
