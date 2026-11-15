@@ -12,11 +12,11 @@ window.BIBL_CONFIG = {
   cfAnalyticsToken: "",
 
   documentUrl: "guide.pdf",
-  documentVersion: "2026-11-09 v5",
+  documentVersion: "2026-11-14 v5.1",
 
   // The reading edition at /read.html is generated from the guide source and moves
   // on its own; comments made there are recorded under this label instead.
-  readVersion: "2026-11-09 reading edition",
+  readVersion: "2026-11-14 reading edition",
 
   // Milliseconds after arrival before the update prompt opens.
   openPromptDelayMs: 900,
