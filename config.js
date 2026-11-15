@@ -9,7 +9,7 @@ window.BIBL_CONFIG = {
   // bump documentVersion so comments record which version they were made on.
   // Cloudflare Web Analytics site token. Public by design — it ships in the page
   // source. Leave blank and no beacon is loaded at all.
-  cfAnalyticsToken: "",
+  cfAnalyticsToken: "2105511727f84290b083a9861ea2ad66",
 
   documentUrl: "guide.pdf",
   documentVersion: "2026-11-14 v5.1",

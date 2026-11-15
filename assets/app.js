@@ -24,9 +24,11 @@ const MAX_PAGE_WIDTH = 880;
 // unaffected and the visit simply is not counted.
 (function () {
   var token = (window.BIBL_CONFIG || {}).cfAnalyticsToken;
-  if (!token) return;
+  // not from a dev server: Cloudflare rejects the report anyway, and a page view from
+  // this machine is not a reader
+  if (!token || ["localhost", "127.0.0.1"].indexOf(location.hostname) >= 0) return;
   var s = document.createElement("script");
-  s.defer = true;
+  s.type = "module";
   s.src = "https://static.cloudflareinsights.com/beacon.min.js";
   s.setAttribute("data-cf-beacon", JSON.stringify({ token: token }));
   document.head.appendChild(s);
@@ -330,6 +332,98 @@ async function openDocument() {
     drawHighlights(v);
     observer.observe(v.div);
   });
+  buildOutline(pdf).catch((err) => console.error(err));
+}
+
+// ---------------------------------------------------------------- outline rail
+// The entries come from the PDF's own bookmarks, so the rail describes whatever file is
+// on the server rather than a list kept in step by hand. The marks follow the same rule
+// as the printed contents page: appendices keep their letter, the unnumbered editorial
+// sections get none, and the chapters are numbered in order.
+const NOTE_SECTION = /Editorial|How This Guide/;
+
+async function outlinePage(pdf, dest) {
+  const target = typeof dest === "string" ? await pdf.getDestination(dest) : dest;
+  if (!Array.isArray(target) || !target[0]) return null;
+  return (await pdf.getPageIndex(target[0])) + 1;
+}
+
+async function buildOutline(pdf) {
+  const nav = $("outline");
+  const list = $("outline-list");
+  if (!nav || !list) return;
+  const raw = await pdf.getOutline();
+  if (!raw || !raw.length) return;
+
+  const items = [];
+  let chapter = 0;
+  for (const entry of raw) {
+    const page = await outlinePage(pdf, entry.dest);
+    if (!page) continue;
+    const appendix = entry.title.match(/^Appendix ([A-Z])\s+(.+)$/);
+    let mark = "";
+    let label = entry.title;
+    if (appendix) {
+      mark = appendix[1];
+      label = appendix[2];
+    } else if (entry.title === "Contents") {
+      mark = "";
+    } else if (!NOTE_SECTION.test(entry.title)) {
+      mark = String(++chapter).padStart(2, "0");
+    }
+    items.push({ page, mark, label });
+  }
+  if (!items.length) return;
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML =
+      '<span class="tick" aria-hidden="true"></span>' +
+      '<span class="mark" aria-hidden="true"></span>' +
+      '<span class="label"></span>';
+    b.querySelector(".mark").textContent = item.mark;
+    b.querySelector(".label").textContent = item.label;
+    b.addEventListener("click", () => {
+      const v = views[item.page - 1];
+      if (!v) return;
+      const top = v.div.getBoundingClientRect().top + window.scrollY - parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue("--topbar-h"), 10) - 14;
+      window.scrollTo({ top, behavior: "smooth" });
+    });
+    li.appendChild(b);
+    item.li = li;
+    list.appendChild(li);
+  });
+  nav.hidden = false;
+
+  // scroll-spy: whichever section the page in view belongs to is the current one
+  const starts = items.map((i) => i.page);
+  let currentIndex = -1;
+  const setCurrent = (page) => {
+    let idx = 0;
+    for (let i = 0; i < starts.length; i++) if (starts[i] <= page) idx = i;
+    if (idx === currentIndex) return;
+    if (currentIndex >= 0) items[currentIndex].li.classList.remove("current");
+    currentIndex = idx;
+    items[idx].li.classList.add("current");
+  };
+  const spy = new IntersectionObserver(
+    (entries) => {
+      const visible = entries.filter((e) => e.isIntersecting);
+      if (!visible.length) return;
+      visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      const num = Number(visible[0].target.dataset.page);
+      if (num) setCurrent(num);
+    },
+    { rootMargin: "-25% 0px -65% 0px", threshold: 0 },
+  );
+  views.forEach((v) => {
+    v.div.dataset.page = String(v.num);
+    spy.observe(v.div);
+  });
+  setCurrent(1);
 }
 
 let resizeTimer = null;

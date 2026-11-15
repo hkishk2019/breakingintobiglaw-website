@@ -24,6 +24,7 @@
     </div>
     <nav class="actions">
       <button type="button" class="link-btn" id="btn-notify"><span class="long">Get the update</span><span class="short">Updates</span></button>
+      <a class="link-btn" id="btn-email" href="mailto:editor@breakingintobiglaw.com" title="editor@breakingintobiglaw.com"><span class="long">Contact the editors</span><span class="short">Contact</span></a>
       <a class="link-btn" id="btn-download" href="guide.pdf" download><span class="long">Download PDF</span><span class="short">PDF</span></a>
       <button type="button" class="link-btn notes-toggle" id="btn-notes" aria-controls="notes" aria-expanded="false">Notes <span class="count" id="notes-count">0</span></button>
     </nav>
@@ -35,6 +36,11 @@
   </div>
 
   <main class="layout">
+    <nav class="outline" id="outline" aria-label="Contents" hidden>
+      <p class="outline-head">Contents</p>
+      <ol id="outline-list"></ol>
+    </nav>
+
     <section class="reader" id="reader" aria-label="Guide">
       <div class="status" id="status">Loading the guide&hellip;</div>
       <div class="pages" id="pages"></div>

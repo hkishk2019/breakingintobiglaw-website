@@ -35,9 +35,11 @@
   // unaffected and the visit simply is not counted.
   (function () {
     var token = (window.BIBL_CONFIG || {}).cfAnalyticsToken;
-    if (!token) return;
+    // not from a dev server: Cloudflare rejects the report anyway, and a page view from
+    // this machine is not a reader
+    if (!token || ["localhost", "127.0.0.1"].indexOf(location.hostname) >= 0) return;
     var s = document.createElement("script");
-    s.defer = true;
+    s.type = "module";
     s.src = "https://static.cloudflareinsights.com/beacon.min.js";
     s.setAttribute("data-cf-beacon", JSON.stringify({ token: token }));
     document.head.appendChild(s);
